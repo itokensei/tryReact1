@@ -48,9 +48,18 @@ class Board extends React.Component {
 class Game extends React.Component {
     constructor(props) {
         super(props);
+        /**
+         * history: 記録
+         * squares: historyの各盤面
+         * addedSquare: historyの各着手
+         * stepNumber: 表示する着手の序数
+         * xIsNext: 表示中の盤面に対するplayer
+         * @type {{xIsNext: boolean, history: [{squares: any[], addedSquare: number}], stepNumber: number}}
+         */
         this.state = {
-          history: [{
+            history: [{
               squares: Array(9).fill(null),
+              addedSquare: 0,
           }],
           stepNumber: 0,
           xIsNext: true,
@@ -60,18 +69,21 @@ class Game extends React.Component {
     handleClick(i) {
         const
             history = this.state.history.slice(0,
-                this.state.stepNumber + 1),
-            current = history[history.length - 1],
-            squares = current.squares.slice();
+                this.state.stepNumber + 1),//表示までの記録
+            current = history[history.length - 1],//表示記録
+            squares = current.squares.slice();//表示盤面
+        //勝敗が決しているor埋まっているマスを選択した場合は実行しない
         if (calculateWinner(squares) || squares[i]) {
             return;
         }
-        squares[i] = this.state.xIsNext ? 'X' : 'O';
+        squares[i] = this.state.xIsNext ? 'X' : 'O';//マスを埋める
         this.setState({
+            //表示までの記録にマスを埋めた次の記録を追加し、表示以降の記録は破棄
             history: history.concat([{
                 squares: squares,
+                addedSquare: i,//着手を記録
             }]),
-            stepNumber: history.length,
+            stepNumber: history.length,//最新の記録を表示させる
             xIsNext: !this.state.xIsNext,
         });
     }
@@ -85,13 +97,18 @@ class Game extends React.Component {
 
     render() {
       const history = this.state.history;
-      const current = history[this.state.stepNumber];
+      const current = history[this.state.stepNumber];//表示している記録
       const winner =
           calculateWinner(current.squares);
+      //記録した履歴
       const moves = history.map((step, move) => {
           const desc = move ?
               'Go to move #' + move :
               'Go to game start';
+          const i = history[move].addedSquare;
+          const action = move ?
+              '(column, low) = (' + coordinates[i][0] + ', ' + coordinates[i][1] +')' :
+              '';
           return (
               <li>
                   <button
@@ -99,6 +116,7 @@ class Game extends React.Component {
                   >
                       {desc}
                   </button>
+                  <div>{action}</div>
               </li>
           )
       })
@@ -155,3 +173,6 @@ function calculateWinner(squares) {
     return null;
 }
 
+var coordinates = [[1,1], [1, 2], [1, 3],
+                   [2, 1], [2, 2], [2, 3],
+                   [3, 1], [3, 2], [3, 3]];
